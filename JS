@@ -1,0 +1,156 @@
+const KEY = 'resume-builder-v1';
+
+// Empty resume data
+const blank = () => ({
+  name: '', role: '', email: '', phone: '', location: '', link: '',
+  summary: '', skills: '', color: '#0f6b63', exp: [], edu: []
+});
+
+// Sample data for the "Load sample" button
+const sample = () => ({
+  name: 'Priya Raman',
+  role: 'Front-End Developer',
+  email: 'priya@example.com',
+  phone: '+91 98765 43210',
+  location: 'Chennai, India',
+  link: 'linkedin.com/in/priyaraman',
+  summary: 'Developer with 3 years of experience building fast, accessible web apps with HTML, CSS and JavaScript.',
+  skills: 'HTML, CSS, JavaScript, React, Git, Responsive design',
+  color: '#0f6b63',
+  exp: [{
+    title: 'Front-End Developer',
+    org: 'BrightApps, Chennai',
+    dates: '2023 – Present',
+    desc: 'Built a dashboard used by 5,000 customers.\nCut page load time by 40%.'
+  }],
+  edu: [{
+    title: 'B.E. Computer Science',
+    org: 'Anna University',
+    dates: '2019 – 2023',
+    desc: ''
+  }]
+});
+
+// Load saved data (if any)
+let data = blank();
+try {
+  const saved = localStorage.getItem(KEY);
+  if (saved) data = Object.assign(blank(), JSON.parse(saved));
+} catch (e) {}
+
+const $ = s => document.querySelector(s);
+
+// Escape text so users can't inject HTML
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+}
+
+// Draw the Experience / Education input boxes
+function renderLists() {
+  ['exp', 'edu'].forEach(type => {
+    $('#' + type + '-list').innerHTML = data[type].map((it, i) => `
+      <div class="item">
+        <button class="rm" type="button" aria-label="Remove" data-rm="${type}:${i}">×</button>
+        <label>${type === 'exp' ? 'Job title' : 'Degree'}</label>
+        <input data-list="${type}:${i}:title" value="${esc(it.title)}">
+        <div class="row">
+          <div>
+            <label>${type === 'exp' ? 'Company' : 'School'}</label>
+            <input data-list="${type}:${i}:org" value="${esc(it.org)}">
+          </div>
+          <div>
+            <label>Dates</label>
+            <input data-list="${type}:${i}:dates" value="${esc(it.dates)}">
+          </div>
+        </div>
+        <label>Details (one point per line)</label>
+        <textarea data-list="${type}:${i}:desc">${esc(it.desc)}</textarea>
+      </div>`).join('');
+  });
+}
+
+// HTML for experience / education entries in the resume
+function entries(list) {
+  return list.map(it => `
+    <div class="entry">
+      <div class="entry-head"><span>${esc(it.title)}</span><span>${esc(it.dates)}</span></div>
+      <div class="sub">${esc(it.org)}</div>
+      ${it.desc
+        ? '<ul style="margin:4px 0 0 18px;padding:0">' +
+          it.desc.split('\n').filter(l => l.trim()).map(l => '<li>' + esc(l) + '</li>').join('') +
+          '</ul>'
+        : ''}
+    </div>`).join('');
+}
+
+// Draw the live resume preview
+function renderResume() {
+  const d = data;
+  const r = $('#resume');
+  r.style.setProperty('--rc', d.color);
+
+  const contact = [d.email, d.phone, d.location, d.link]
+    .filter(Boolean).map(c => `<span>${esc(c)}</span>`).join('');
+  const skills = d.skills.split(',').map(s => s.trim()).filter(Boolean)
+    .map(s => `<span>${esc(s)}</span>`).join('');
+
+  r.innerHTML = `
+    <h2>${d.name ? esc(d.name) : '<span class="placeholder">Your name</span>'}</h2>
+    <div class="title">${esc(d.role)}</div>
+    <div class="contact">${contact}</div>
+    ${d.summary ? `<h3>Summary</h3><p>${esc(d.summary)}</p>` : ''}
+    ${d.exp.length ? `<h3>Experience</h3>${entries(d.exp)}` : ''}
+    ${d.edu.length ? `<h3>Education</h3>${entries(d.edu)}` : ''}
+    ${skills ? `<h3>Skills</h3><div class="skills">${skills}</div>` : ''}`;
+}
+
+// Put saved values back into the form
+function fillInputs() {
+  document.querySelectorAll('[data-k]').forEach(el => {
+    el.value = data[el.dataset.k] ?? '';
+  });
+  renderLists();
+  renderResume();
+}
+
+// Typing in any field -> update data + preview
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.k) {
+    data[el.dataset.k] = el.value;
+  } else if (el.dataset.list) {
+    const [type, i, field] = el.dataset.list.split(':');
+    data[type][i][field] = el.value;
+  } else {
+    return;
+  }
+  renderResume();
+  save();
+});
+
+// Add / remove experience and education
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.dataset.add) {
+    data[t.dataset.add].push({ title: '', org: '', dates: '', desc: '' });
+    renderLists(); renderResume(); save();
+  }
+  if (t.dataset.rm) {
+    const [type, i] = t.dataset.rm.split(':');
+    data[type].splice(i, 1);
+    renderLists(); renderResume(); save();
+  }
+});
+
+// Top bar buttons
+$('#sample').onclick = () => { data = sample(); save(); fillInputs(); };
+$('#reset').onclick = () => {
+  if (confirm('Clear all fields?')) { data = blank(); save(); fillInputs(); }
+};
+$('#print').onclick = () => window.print();
+
+// Start
+fillInputs();
