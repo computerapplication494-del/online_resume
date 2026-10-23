@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resume Builder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="top">
+    <h1>Resume Builder</h1>
+    <div>
+      <button class="btn ghost" type="button" id="sample">Load sample</button>
+      <button class="btn ghost" type="button" id="reset">Clear</button>
+      <button class="btn" type="button" id="print">Download PDF</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT: form -->
+    <form id="editor" onsubmit="return false">
+      <fieldset>
+        <legend>Personal details</legend>
+        <label for="name">Full name</label><input id="name" data-k="name">
+        <label for="role">Job title</label><input id="role" data-k="role">
+        <div class="row">
+          <div><label for="email">Email</label><input id="email" data-k="email" type="email"></div>
+          <div><label for="phone">Phone</label><input id="phone" data-k="phone"></div>
+        </div>
+        <label for="location">Location</label><input id="location" data-k="location">
+        <label for="link">Website / LinkedIn</label><input id="link" data-k="link">
+        <label for="summary">Summary</label><textarea id="summary" data-k="summary"></textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>Experience</legend>
+        <div id="exp-list"></div>
+        <button class="btn ghost add" type="button" data-add="exp">Add experience</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Education</legend>
+        <div id="edu-list"></div>
+        <button class="btn ghost add" type="button" data-add="edu">Add education</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Skills</legend>
+        <label for="skills">Separate with commas</label>
+        <input id="skills" data-k="skills">
+      </fieldset>
+
+      <fieldset>
+        <legend>Color</legend>
+        <select id="color" data-k="color">
+          <option value="#0f6b63">Teal</option>
+          <option value="#1f4e9c">Blue</option>
+          <option value="#8a2b3d">Maroon</option>
+          <option value="#333333">Charcoal</option>
+        </select>
+      </fieldset>
+    </form>
+
+    <!-- RIGHT: live preview -->
+    <div class="preview-wrap">
+      <article id="resume" aria-label="Resume preview"></article>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
